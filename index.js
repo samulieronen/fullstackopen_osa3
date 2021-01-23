@@ -6,7 +6,7 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/23 13:44:37 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/23 16:22:31 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/23 19:18:00 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ let persons = [
 ]
 
 app.use(cors())
+app.use(express.static('build'))
 app.use(express.json())
 app.use(morgan('tiny'))
 
