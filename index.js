@@ -6,41 +6,21 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/23 13:44:37 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/23 19:18:00 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/24 20:47:49 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
-
-let persons = [
-	{
-		id: 1,
-		name: "Arto Hellas",
-		number: "040-123456"
-	},
-	{
-		id: 2,
-		name: "Ada Lovelace",
-		number: "39-44-5323523"
-	},
-	{
-		id: 3,
-		name: "Dan Abramov",
-		number: "12-43-234345"
-	},
-	{
-		id: 4,
-		name: "Mary Poppendick",
-		number: "39-23-5423122"
-	}
-]
+const Contact = require('./models/contact')
+const { request, response } = require('express')
 
 app.use(cors())
-app.use(express.static('build'))
 app.use(express.json())
+app.use(express.static('build'))
 app.use(morgan('tiny'))
 
 app.get('/', (request, response) => {
@@ -48,50 +28,60 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/persons', (request, response) => {
-	response.json(persons)
+	Contact.find({}).then(result => {
+		response.json(result)
+	})
 })
 
-app.get('/api/persons/:id', (request, response) => {
-	const id = Number(request.params.id)
-	const person = persons.find(p => p.id === id)
-	if (person){
-		console.log(person)
-		response.json(person)
-	}
-	else {
-		console.log(`No resource with id: ${id}`)
-		response.status(404).end()
-	}
+app.get('/api/persons/:id', (request, response, next) => {
+	Contact.findById(request.params.id)
+		.then(contact => {
+			if (contact) {
+				response.json(contact)
+			}
+			else {
+				response.status(404).end()
+			}
+		})
+		.catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (request, response) => {
-	const id = Number(request.params.id)
-	persons = persons.filter(p => p.id !== id)
-	response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+	Contact.findByIdAndRemove(request.params.id)
+		.then(result => {
+			response.status(204).end()
+		})
+		.catch(error => next(error))
 })
 
-const genId = (min, max) => {
-	min = Math.ceil(min)
-	max = Math.floor(max)
-	return (Math.floor(Math.random() * (max - min) + min))
-}
-
-app.post('/api/persons', (request, response) => {
-	const person = request.body
-	const id = genId(10, 300)
-	person.id = id
-	if (!person.name) {
+app.post('/api/persons', (request, response, next) => {
+	const contact = new Contact({
+		name: request.body.name,
+		number: request.body.number
+	})
+	if (!contact.name) {
 		return response.status(400).json({error: 'Name missing in data'})
 	}
-	else if (!person.number) {
+	else if (!contact.number) {
 		return response.status(400).json({error: 'Number missing in data'})
 	}
-	else if (dup = persons.find(p => p.name.toLowerCase() === person.name.toLowerCase())) {
-		return response.status(400).json({error: 'Name must be unique'})
+	contact.save({new: true}).then(newContact => {
+		console.log(`Contact saved!`)
+		response.json(newContact)
+	})
+	.catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (request, response, next) => {
+	const contact = {
+		name: request.body.name,
+		number: request.body.number
 	}
-	console.log(person)
-	persons = persons.concat(person)
-	response.json(person)
+	Contact.findByIdAndUpdate(request.params.id, contact, {new: true})
+		.then(newContact => {
+			response.json(newContact)
+		})
+		.catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
@@ -102,4 +92,19 @@ const port = process.env.PORT || 3001
 app.listen(port, () => {
 	console.log(`Server running at port ${port}`)
 })
+
+const invalidEndpoint = (request, response) => {
+	response.status(404).send({error: 'invalid api endpoint'})
+}
+app.use(invalidEndpoint)
+
+const errorHandler = (error, request, response, next) => {
+	console.log(error.message)
+	if (error.name == 'CastError') {
+		return response.status(400).send({error: 'invalid id'})
+	}
+	next(error)
+}
+app.use(errorHandler)
+
 
