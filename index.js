@@ -6,7 +6,7 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/23 13:44:37 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/24 21:00:53 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/24 22:31:49 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -69,12 +69,13 @@ app.post('/api/persons', (request, response, next) => {
 	else if (!contact.number) {
 		return response.status(400).json({error: 'Number missing in data'})
 	}
-	contact.save({new: true}).then(newContact => {
-		console.log(`Contact saved!`)
-		response.json(newContact)
-		amount += 1
-	})
-	.catch(error => next(error))
+	contact.save({new: true})
+		.then(newContact => {
+			console.log(`Contact saved!`)
+			response.json(newContact)
+			amount += 1
+		})
+		.catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -105,8 +106,11 @@ app.use(invalidEndpoint)
 
 const errorHandler = (error, request, response, next) => {
 	console.log(error.message)
-	if (error.name == 'CastError') {
+	if (error.name === 'CastError') {
 		return response.status(400).send({error: 'invalid id'})
+	}
+	else if (error.name === 'ValidationError') {
+		return response.status(400).send({error: error.message})
 	}
 	next(error)
 }
