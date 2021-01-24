@@ -6,7 +6,7 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/23 13:44:37 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/24 20:47:49 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/24 21:00:53 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,8 @@ app.use(express.json())
 app.use(express.static('build'))
 app.use(morgan('tiny'))
 
+let amount = 0
+
 app.get('/', (request, response) => {
 	response.send('<h1>Hello, World!</h1>')
 })
@@ -30,6 +32,7 @@ app.get('/', (request, response) => {
 app.get('/api/persons', (request, response) => {
 	Contact.find({}).then(result => {
 		response.json(result)
+		amount = result.length
 	})
 })
 
@@ -50,6 +53,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 	Contact.findByIdAndRemove(request.params.id)
 		.then(result => {
 			response.status(204).end()
+			amount -= 1
 		})
 		.catch(error => next(error))
 })
@@ -68,6 +72,7 @@ app.post('/api/persons', (request, response, next) => {
 	contact.save({new: true}).then(newContact => {
 		console.log(`Contact saved!`)
 		response.json(newContact)
+		amount += 1
 	})
 	.catch(error => next(error))
 })
@@ -85,7 +90,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 })
 
 app.get('/info', (request, response) => {
-	response.send(`<h3>Phonebook has ${persons.length} people.</h3><h3>${new Date()}</h3>`)
+	response.send(`<h3>Phonebook has ${amount} people.</h3><h3>${new Date()}</h3>`)
 })
 
 const port = process.env.PORT || 3001
