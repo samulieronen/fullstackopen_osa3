@@ -6,7 +6,7 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/23 13:44:37 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/24 22:31:49 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/24 23:34:25 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
 const Contact = require('./models/contact')
-const { request, response } = require('express')
 
 app.use(cors())
 app.use(express.json())
@@ -51,7 +50,7 @@ app.get('/api/persons/:id', (request, response, next) => {
 
 app.delete('/api/persons/:id', (request, response, next) => {
 	Contact.findByIdAndRemove(request.params.id)
-		.then(result => {
+		.then(() => {
 			response.status(204).end()
 			amount -= 1
 		})
@@ -64,14 +63,14 @@ app.post('/api/persons', (request, response, next) => {
 		number: request.body.number
 	})
 	if (!contact.name) {
-		return response.status(400).json({error: 'Name missing in data'})
+		return response.status(400).json({ error: 'Name missing in data' })
 	}
 	else if (!contact.number) {
-		return response.status(400).json({error: 'Number missing in data'})
+		return response.status(400).json({ error: 'Number missing in data' })
 	}
-	contact.save({new: true})
+	contact.save({ new: true })
 		.then(newContact => {
-			console.log(`Contact saved!`)
+			console.log('Contact saved!')
 			response.json(newContact)
 			amount += 1
 		})
@@ -83,7 +82,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 		name: request.body.name,
 		number: request.body.number
 	}
-	Contact.findByIdAndUpdate(request.params.id, contact, {new: true})
+	Contact.findByIdAndUpdate(request.params.id, contact, { new: true })
 		.then(newContact => {
 			response.json(newContact)
 		})
@@ -100,17 +99,17 @@ app.listen(port, () => {
 })
 
 const invalidEndpoint = (request, response) => {
-	response.status(404).send({error: 'invalid api endpoint'})
+	response.status(404).send({ error: 'invalid api endpoint' })
 }
 app.use(invalidEndpoint)
 
 const errorHandler = (error, request, response, next) => {
 	console.log(error.message)
 	if (error.name === 'CastError') {
-		return response.status(400).send({error: 'invalid id'})
+		return response.status(400).send({ error: 'invalid id' })
 	}
 	else if (error.name === 'ValidationError') {
-		return response.status(400).send({error: error.message})
+		return response.status(400).send({ error: error.message })
 	}
 	next(error)
 }

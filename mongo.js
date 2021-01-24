@@ -6,7 +6,7 @@
 /*   By: seronen <seronen@student.hive.fi>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/01/24 02:24:00 by seronen           #+#    #+#             */
-/*   Updated: 2021/01/24 02:50:14 by seronen          ###   ########.fr       */
+/*   Updated: 2021/01/24 23:16:13 by seronen          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ if (process.argv.length >= 6) {
 		name: process.argv[4],
 		number: process.argv[5]
 	})
-	contact.save().then(response => {
+	contact.save().then(() => {
 		console.log(`Contact ${contact.name} saved!`)
 		mongoose.connection.close()
 	})
